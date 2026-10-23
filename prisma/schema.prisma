@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -28,5 +25,30 @@ model Post {
   published Boolean  @default(false)
   authorId  String
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Love notes that visitors leave for Diraa & Pupaa. Persist across sessions.
+model LoveNote {
+  id        String   @id @default(cuid())
+  author    String
+  body      String
+  createdAt DateTime @default(now())
+}
+
+// Singleton record holding the current "Our Little Soundtrack" song.
+model SongSetting {
+  id        String   @id @default("singleton")
+  url       String   @default("")
+  title     String   @default("Our Little Song")
+  artist    String   @default("Just for You")
+  cover     String   @default("")
+  updatedAt DateTime @updatedAt
+}
+
+// Singleton record holding ALL editable site content as a JSON string.
+model SiteContent {
+  id        String   @id @default("singleton")
+  data      String   @default("{}")
   updatedAt DateTime @updatedAt
 }

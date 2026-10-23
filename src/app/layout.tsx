@@ -1,37 +1,35 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Playfair_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "600", "700", "800"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
   subsets: ["latin"],
+  display: "swap",
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "Z.ai Code Scaffold - AI-Powered Development",
-  description: "Modern Next.js scaffold optimized for AI-powered development with Z.ai. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
-  keywords: ["Z.ai", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI development", "React"],
-  authors: [{ name: "Z.ai Team" }],
+  title: "Diraa & Pupaa — Our Little Universe ♡",
+  description:
+    "A little world, made just for us. A romantic anniversary gift for Diraa from Pupaa.",
+  keywords: ["anniversary", "love", "romantic", "Diraa", "Pupaa", "our little universe"],
+  authors: [{ name: "Pupaa" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/logo.svg",
   },
   openGraph: {
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
-    url: "https://chat.z.ai",
-    siteName: "Z.ai",
+    title: "Diraa & Pupaa — Our Little Universe ♡",
+    description: "A little world, made just for us.",
     type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
   },
 };
 
@@ -43,7 +41,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
+        className={`${playfair.variable} ${dmSans.variable} antialiased bg-background text-foreground font-sans`}
       >
         {children}
         <Toaster />
