@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { checkAdminPassword } from '@/lib/storage';
 
 const SESSION_KEY = 'diraa-pupaa:admin-token';
 
@@ -25,6 +26,12 @@ interface AdminContextValue {
 
 const AdminContext = createContext<AdminContextValue | null>(null);
 
+/**
+ * AdminProvider — manages the creator's signed-in state for the in-site
+ * editor. On static hosting (GitHub Pages) the password is checked
+ * client-side against ADMIN_PASSWORD in src/lib/storage.ts. The token is
+ * kept in sessionStorage (cleared when the tab closes).
+ */
 export function AdminProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [loginOpen, setLoginOpen] = useState(false);
@@ -40,27 +47,18 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (password: string): Promise<boolean> => {
+    // Tiny delay to feel like a real check (and keep the UI calm).
+    await new Promise((r) => setTimeout(r, 200));
+    if (!checkAdminPassword(password)) return false;
+    // Use a fixed token string; real auth would be server-side.
+    const t = 'admin';
+    setToken(t);
     try {
-      const res = await fetch('/api/auth/admin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Could not sign in.');
-      }
-      const t = data.token as string;
-      setToken(t);
-      try {
-        window.sessionStorage.setItem(SESSION_KEY, t);
-      } catch {
-        // ignore
-      }
-      return true;
+      window.sessionStorage.setItem(SESSION_KEY, t);
     } catch {
-      return false;
+      // ignore
     }
+    return true;
   }, []);
 
   const logout = useCallback(() => {

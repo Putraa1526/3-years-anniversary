@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Loader2, RefreshCw, Send, Trash2 } from 'lucide-react';
 import { useContent } from '@/lib/romantic/content-context';
 import { useToast } from '@/hooks/use-toast';
+import { getNotes, addNote, deleteNote as removeNote } from '@/lib/storage';
 import SectionHeading from './SectionHeading';
 
 const MAX_AUTHOR = 50;
@@ -135,12 +136,9 @@ export default function LoveNotes() {
 
   const loadNotes = useCallback(async () => {
     try {
-      const res = await fetch('/api/love-notes', { cache: 'no-store' });
-      if (!res.ok) throw new Error('fetch failed');
-      const data = (await res.json()) as { notes: LoveNote[] };
-      setNotes(data.notes ?? []);
+      setNotes(getNotes());
     } catch {
-      // keep current state
+      // ignore
     } finally {
       setLoading(false);
     }
@@ -187,38 +185,17 @@ export default function LoveNotes() {
       return;
     }
 
-    const tempId = `temp-${Date.now()}`;
-    const optimistic: LoveNote = {
-      id: tempId,
-      author: authorStr,
-      body: bodyStr,
-      createdAt: new Date().toISOString(),
-    };
-    setNotes((prev) => [optimistic, ...prev]);
-    setBody('');
-    setAuthor('');
     setSubmitting(true);
-
     try {
-      const res = await fetch('/api/love-notes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ author: authorStr, body: bodyStr }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Could not save your note.');
-      }
-      const data = (await res.json()) as { note: LoveNote };
-      setNotes((prev) =>
-        prev.map((n) => (n.id === tempId ? data.note : n))
-      );
+      const note = addNote(authorStr, bodyStr);
+      setNotes((prev) => [note, ...prev]);
+      setBody('');
+      setAuthor('');
       toast({
         title: 'Note sent ♡',
-        description: 'Your little note has been kept in their universe.',
+        description: 'Your little note has been kept in this browser.',
       });
     } catch (err) {
-      setNotes((prev) => prev.filter((n) => n.id !== tempId));
       toast({
         title: 'Could not save your note',
         description:
@@ -238,10 +215,7 @@ export default function LoveNotes() {
     const snapshot = notes;
     setNotes((prev) => prev.filter((n) => n.id !== note.id));
     try {
-      const res = await fetch(`/api/love-notes/${encodeURIComponent(note.id)}`, {
-        method: 'DELETE',
-      });
-      if (!res.ok) throw new Error('delete failed');
+      removeNote(note.id);
       toast({
         title: 'Note removed ♡',
         description: 'A little note has been gently let go.',

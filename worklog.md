@@ -69,3 +69,39 @@ Stage Summary:
 - Complete romantic anniversary website fully rebuilt and verified.
 - All 3 feature layers working: (1) the romantic site with all 9 sections, (2) persistent love notes + editable song (DB-backed), (3) full in-site admin editor for all text + photos (DB-backed, admin-gated).
 - Lint clean, dev server healthy, no errors. Clean DB state left for the user.
+
+---
+Task ID: GITHUB-PAGES
+Agent: main (orchestrator)
+Task: Make the site hostable for free on GitHub Pages (static-only hosting).
+
+Work Log:
+- Explained the tradeoff: GitHub Pages is static-only (no server/DB/API), so DB-backed features moved to localStorage (per-browser persistence).
+- Created src/lib/storage.ts — localStorage adapter: getContent/saveContent, getNotes/addNote/deleteNote, getSong/saveSong, uploadImage/uploadAudio (base64 data URLs with size caps: 1.5MB images / 3MB audio), checkAdminPassword (client-side soft gate), quota-error handling.
+- Updated src/lib/romantic/content-context.tsx — ContentProvider now reads from localStorage (with cross-tab sync via 'storage' event) instead of fetch /api/content.
+- Updated src/lib/romantic/admin-context.tsx — login now checks password client-side via storage.checkAdminPassword; token stored in sessionStorage.
+- Updated src/components/romantic/LoveNotes.tsx — uses storage.getNotes/addNote/deleteNote instead of fetch /api/love-notes. Optimistic add/delete, toast on save.
+- Updated src/components/romantic/MusicPlayer.tsx — uses storage.getSong/saveSong/uploadAudio instead of fetch /api/song + /api/song/upload. Both URL paste and file upload (base64) work.
+- Updated src/components/romantic/AdminPanel.tsx — handleSave uses storage.saveContent(draft) + refresh(); PhotoInput uses storage.uploadImage (base64). Removed x-admin-token headers.
+- Deleted src/app/api/ folder entirely (route handlers break `output: 'export'` build). Kept prisma/ + src/lib/db.ts for a future Node/Vercel deploy.
+- Updated next.config.ts: output: 'export', images: { unoptimized: true }, trailingSlash: true, devIndicators: false, optional basePath/assetPrefix via NEXT_PUBLIC_BASE_PATH env (auto-detected in CI for project pages).
+- Updated package.json: build script simplified to `next build` (produces ./out); added `serve` script (`bunx serve out -p 3000`) for local static preview.
+- Added .github/workflows/deploy.yml — GitHub Actions: checkout → setup bun → install → auto-detect basePath (user page vs project page) → build → upload ./out artifact → deploy-pages. Triggers on push to main + manual.
+- Added DEPLOY.md — full Indonesian guide: tradeoff explanation, 5-step deploy (create repo, push, enable Pages=GitHub Actions, wait, open URL), change admin password, replace photos/music, share edits with Diraa (2 methods), local preview via `bun run build` + `bun run serve`, troubleshooting, Vercel/Supabase upgrade path.
+- Lint clean (0 errors, 0 warnings).
+- Static build: `bun run build` → compiled in 6.7s, generated static pages (/, /_not-found), produced ./out with index.html + images/gallery/photo-1..6.png + _next assets.
+- Agent Browser end-to-end verification on static `serve out` build:
+  • Welcome screen renders, "Open Our World" enters the site with envelope animation.
+  • All 9 sections present; all 6 gallery images loaded.
+  • No console errors, no dev-log errors.
+  • Love Notes: submitted "Testing notes on static GitHub Pages build ♡" → saved → PERSISTED across full reload (localStorage working).
+  • Admin: "Creator" button → login → correct password ("ourlittleuniverse") → AdminPanel opens with 7 tabs → edited partner one to "Diraa Sayang" → Save → site updated LIVE → PERSISTED across reload.
+  • Music: Add song via URL (SoundHelix sample) → Save → player shows title/artist + duration 6:12 + Play button → PERSISTED across reload (button changed to "Edit song").
+  • Cleared localStorage + verified clean default state restored.
+- Restarted dev server on port 3000 (still works with the new localStorage-based code — no API needed).
+
+Stage Summary:
+- The site now builds as a fully static export (./out) deployable to GitHub Pages or any static host.
+- All visual/interactive features work; love notes + admin edits + song + photos persist per-browser via localStorage (with documented way to bake edits into the source for permanent sharing).
+- One-command deploy: push to GitHub main branch → Actions auto-builds + deploys → site live at https://<user>.github.io/<repo>/ (free, forever).
+- DEPLOY.md has full step-by-step Indonesian instructions. Lint clean, build verified, end-to-end browser-verified.
