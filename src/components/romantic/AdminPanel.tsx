@@ -11,7 +11,6 @@ import { useContent } from '@/lib/romantic/content-context';
 import {
   type SiteContent, type StoryItem, type GalleryItem, type SurpriseCard, defaultContent,
 } from '@/config/loveConfig';
-import { saveContent as persistContent, uploadImage } from '@/lib/storage';
 import { Heart, Loader2, Plus, Trash2, Upload, Image as ImageIcon, RotateCcw } from 'lucide-react';
 
 const TABS = [
@@ -53,10 +52,11 @@ export default function AdminPanel() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const result = persistContent(draft);
-      if (!result.ok) throw new Error(result.error);
-      refresh();
-      toast({ title: 'Your changes were saved ♡', description: 'The site has been updated in this browser.' });
+      const res = await fetch('/api/content', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-token': token ?? '' }, body: JSON.stringify(draft) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not save.');
+      await refresh();
+      toast({ title: 'Your changes were saved ♡', description: 'The site has been updated.' });
     } catch (err) {
       toast({ title: 'Could not save', description: err instanceof Error ? err.message : 'Please try again in a moment.' });
     } finally {
@@ -174,8 +174,12 @@ function PhotoInput({ label, value, onChange, token, toast }: { label: string; v
     if (!f) return;
     setUploading(true);
     try {
-      const dataUrl = await uploadImage(f);
-      onChange(dataUrl);
+      const fd = new FormData();
+      fd.append('file', f);
+      const res = await fetch('/api/upload', { method: 'POST', headers: { 'x-admin-token': token ?? '' }, body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed.');
+      onChange(data.url as string);
       toast({ title: 'Photo uploaded ♡' });
     } catch (err) {
       toast({ title: 'Could not upload', description: err instanceof Error ? err.message : 'Please try again.' });

@@ -15,7 +15,6 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { LOVE_CONFIG } from '@/config/loveConfig';
 import { useContent } from '@/lib/romantic/content-context';
-import { getSong, saveSong as persistSong, uploadAudio } from '@/lib/storage';
 import SectionHeading from './SectionHeading';
 
 interface SongState {
@@ -45,7 +44,10 @@ export default function MusicPlayer() {
   const loadSong = useCallback(async () => {
     setSongLoading(true);
     try {
-      setSong(getSong());
+      const res = await fetch('/api/song', { cache: 'no-store' });
+      if (!res.ok) throw new Error('fetch failed');
+      const data = (await res.json()) as SongState;
+      setSong(data);
     } catch {
       setSong({
         url: LOVE_CONFIG.music.songUrl,
@@ -312,15 +314,24 @@ function EditSongDialog({ open, onOpenChange, current, onSaved, toast, onReload 
     try {
       let finalUrl = url.trim();
       if (file) {
-        finalUrl = await uploadAudio(file);
+        const fd = new FormData();
+        fd.append('file', file);
+        const upRes = await fetch('/api/song/upload', { method: 'POST', body: fd });
+        const upData = await upRes.json();
+        if (!upRes.ok) throw new Error(upData.error || 'Upload failed.');
+        finalUrl = upData.url as string;
       }
-      const next: SongState = { url: finalUrl, title: title.trim() || LOVE_CONFIG.music.title, artist: artist.trim() || LOVE_CONFIG.music.artist, cover: current.cover || '' };
-      const result = persistSong(next);
-      if (!result.ok) throw new Error(result.error);
-      onSaved(next);
+      const res = await fetch('/api/song', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: finalUrl, title: title.trim(), artist: artist.trim(), cover: current.cover || '' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not save the song.');
+      onSaved({ url: data.url, title: data.title, artist: data.artist, cover: data.cover });
       onReload();
       onOpenChange(false);
-      toast({ title: 'Our song has been saved ♡', description: 'It will play here whenever you return to this browser.' });
+      toast({ title: 'Our song has been saved ♡', description: 'It will play here whenever you return.' });
     } catch (err) {
       toast({ title: 'Could not save the song', description: err instanceof Error ? err.message : 'Please try again in a moment.' });
     } finally {
@@ -333,10 +344,14 @@ function EditSongDialog({ open, onOpenChange, current, onSaved, toast, onReload 
     if (!ok) return;
     setSaving(true);
     try {
-      const next: SongState = { url: '', title: title.trim() || LOVE_CONFIG.music.title, artist: artist.trim() || LOVE_CONFIG.music.artist, cover: '' };
-      const result = persistSong(next);
-      if (!result.ok) throw new Error(result.error);
-      onSaved(next);
+      const res = await fetch('/api/song', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: '', title: title.trim(), artist: artist.trim(), cover: '' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not remove the song.');
+      onSaved({ url: '', title: data.title, artist: data.artist, cover: '' });
       onReload();
       onOpenChange(false);
       toast({ title: 'Song removed.' });

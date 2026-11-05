@@ -1,37 +1,18 @@
-# 💗 Hosting Gratis di GitHub Pages — Panduan Lengkap
+# 💗 Hosting Gratis di Vercel — Panduan Lengkap
 
-Website "Diraa & Pupaa — Our Little Universe" sudah dikonfigurasi untuk hosting **gratis** di GitHub Pages. Ikuti langkah-langkah di bawah ini.
-
----
-
-## ⚠️ Yang perlu diketahui dulu
-
-GitHub Pages itu **static hosting** — tidak ada server, tidak ada database. Jadi fitur-fitur yang tadinya pakai database sekarang pakai **localStorage browser**:
-
-| Fitur | Cara kerja di GitHub Pages |
-|---|---|
-| Welcome, Hero, Story, Days, Gallery, Letter, Surprise, Footer | ✅ Jalan penuh, tidak berubah |
-| Love Notes (tulis pesan) | ✅ Tersimpan di browser pengunjung (per-browser, tidak shared antar perangkat) |
-| Admin editor (edit teks & foto) | ✅ Edit disimpan di browser kamu (per-browser). Edit di laptop tidak otomatis muncul di HP/hp Diraa. |
-| Musik | ✅ Tambah via URL atau upload (upload dibatasi ~3MB untuk muat di localStorage) |
-| Foto galeri/story | ✅ Upload foto (dibatasi ~1.5MB) atau paste URL gambar |
-
-**Intinya:** situs romantisnya utuh dan keren. Yang berbeda: catatan & hasil edit admin tersimpan per-browser, bukan shared ke semua orang. Untuk gift ke Diraa, kamu (Pupaa) bisa edit di laptop/komputermu lalu tunjukkan ke Diraa di perangkat itu, atau backup edit-an kamu secara manual (lihat bagian "Membagikan edit-an ke Diraa" di bawah).
+Website "Diraa & Pupaa — Our Little Universe" sudah dikonfigurasi untuk hosting **gratis** di Vercel. Vercel mendukung server + API routes + database, jadi **semua data tersimpan di server dan muncul di semua perangkat** — pesan dari laptop kamu langsung muncul di HP Diraa, dan edit-an admin kamu juga langsung terlihat semua orang.
 
 ---
 
 ## 🚀 Cara deploy — 5 langkah
 
-### 1. Buat repo baru di GitHub
-- Masuk ke https://github.com/new
-- Nama repo: bebas, misalnya `our-little-universe`
-- Pilih **Public** (gratis untuk GitHub Pages)
-- Jangan centang "Add a README" dulu
-- Klik **Create repository**
+### 1. Buat akun Vercel gratis
+- Buka https://vercel.com/signup
+- Sign up pakai **GitHub** (paling gampang) atau email
+- Gratis selamanya untuk web pribadi
 
-### 2. Push kode ke repo
+### 2. Push kode ke GitHub
 Di terminal di folder proyek ini:
-
 ```bash
 git init
 git add .
@@ -40,102 +21,98 @@ git branch -M main
 git remote add origin https://github.com/<USERNAME-MU>/our-little-universe.git
 git push -u origin main
 ```
-
 Ganti `<USERNAME-MU>` dengan username GitHub kamu.
 
-### 3. Aktifkan GitHub Pages lewat GitHub Actions
-- Buka repo di GitHub → tab **Settings** → menu kiri **Pages**
-- Bagian "Build and deployment" → **Source** = **GitHub Actions** (bukan "Deploy from a branch")
+### 3. Import project di Vercel
+- Login ke https://vercel.com/dashboard
+- Klik **Add New** → **Project**
+- Pilih repo `our-little-universe` dari daftar (atau klik "Import" → connect GitHub account dulu kalau belum)
+- Vercel auto-detect Next.js — biarkan setting default
+- Di bagian **Environment Variables**, tambahkan:
+  - `ADMIN_PASSWORD` = password rahasia kamu (mis. `rahasia-diraa-2024`)
+- Klik **Deploy**
 
-### 4. Tunggu build selesai
-- Buka tab **Actions** di repo
-- Workflow "Deploy to GitHub Pages" akan otomatis jalan saat kamu push
-- Tunggu sampai ada tanda ✅ hijau (biasanya 1-2 menit)
+### 4. Tunggu build selesai (1-2 menit)
+- Vercel akan build + deploy otomatis
+- Tunggu sampai ada confetti 🎉 dan tombol "Visit"
 
 ### 5. Buka webnya!
-Setelah workflow selesai:
-- Repo → **Settings** → **Pages** → akan muncul link "Your site is live at https://...”
-- URL-nya:
-  - Kalau repo bernama `<username>.github.io` → `https://<username>.github.io/`
-  - Kalau repo biasa → `https://<username>.github.io/<repo-name>/`
+- Vercel kasih URL gratis seperti `our-little-universe-xxx.vercel.app`
+- Buka, klik "Open Our World" ♡, lalu login admin (di footer → "Creator" → password kamu)
+- Edit apa pun → **langsung tersimpan di server** → buka di HP/notebook lain → langsung kelihatan!
 
-Selesai! 💗 Web kamu sudah live, gratis, selamanya.
+Selesai! Web kamu live gratis, data tersimpan permanen di server Vercel, muncul di semua perangkat. 💗
 
 ---
 
-## 🔑 Ganti password admin (PENTING!)
+## 🔑 Ganti password admin
 
-Default password admin = `ourlittleuniverse`. Ganti supaya orang tidak sembarang masuk editor:
+Di Vercel: **Settings** → **Environment Variables** → edit `ADMIN_PASSWORD` → **Redeploy**.
 
-1. Buka file `src/lib/storage.ts`
-2. Cari baris: `export const ADMIN_PASSWORD = 'ourlittleuniverse';`
-3. Ganti `ourlittleuniverse` dengan password rahasia kamu sendiri
-4. Commit & push — build ulang akan otomatis jalan
-
-> Catatan: password ini terlihat di source code (karena static hosting). Ini cuma gerbang halus supaya pengunjung biasa tidak masuk editor — bukan keamanan beneran. Untuk gift personal, sudah lebih dari cukup.
+Lokal (development): edit `.env` → `ADMIN_PASSWORD=...` → restart dev server.
 
 ---
 
-## 📸 Ganti foto & musik
+## 📸 Ganti foto, musik, dan semua teks
 
-### Foto galeri (default)
-Foto bawaan ada di `public/images/gallery/photo-1.png` sampai `photo-6.png`. Cara ganti:
-- Ganti file di folder itu dengan foto kamu sendiri (nama sama: `photo-1.png`, dst.)
-- Atau lewat admin panel: login → tab **Gallery** → upload/paste URL → Save
+Semua bisa diedit **langsung dari website** lewat admin panel:
+1. Buka web → scroll ke paling bawah (footer)
+2. Klik tombol **"Creator"** (ikon gembok)
+3. Masuk pakai password kamu
+4. Panel editor terbuka dengan 7 tab: Brand & Hero, Days, Our Story, Gallery, Letter, Surprises, Footer
+5. Upload foto, paste URL gambar/lagu, edit teks → klik **Save changes**
+6. Perubahan **langsung tersimpan di server** dan muncul di semua perangkat yang buka web
+
+### Foto galeri (default bawaan)
+Foto bawaan ada di `public/images/gallery/photo-1.png` sampai `photo-6.png`. Ganti file di folder itu dengan foto kamu sendiri (nama sama), lalu commit & push — Vercel akan auto-rebuild.
 
 ### Musik
-- Login admin → section Music → klik **"Add our song"**
-- Pilih file audio (mp3/wav/ogg, maks ~3MB) **atau** paste URL lagu (misalnya dari link public)
-
-### Foto story timeline
-- Login admin → tab **Our Story** → upload/paste URL per momen
-
-> Untuk foto besar atau lagu panjang: lebih baik upload dulu ke tempat lain (mis. Google Drive, Imgur, SoundCloud) lalu **paste URL-nya** di admin panel — begitu juga tidak memenuhi localStorage.
+Login admin → section Music → klik **"Add our song"** → upload file (maks 25MB) atau paste URL lagu.
 
 ---
 
-## 💝 Membagikan edit-an ke Diraa
+## 📱 Kenapa Vercel cocok untuk hadiah ke Diraa
 
-Karena edit-an admin tersimpan per-browser, kalau kamu mau Diraa lihat hasil edit kamu di perangkatnya, ada 2 cara:
+| Aksi | Hasilnya |
+|---|---|
+| Kamu tulis pesan dari laptop | ✅ **Muncul di HP Diraa** (di server, shared) |
+| Kamu edit surat/foto dari laptop | ✅ **Muncul di HP Diraa** |
+| Kamu tambah lagu dari laptop | ✅ **Muncul di semua perangkat** |
+| Diraa clear cache / ganti browser | ✅ **Data tetap ada** (di server) |
+| Kapan pun web dibuka | ✅ **Selalu lihat data terbaru** |
 
-**Cara A (paling gampang):** Tunjukkan langsung di perangkat kamu. Edit di laptop/hp kamu, lalu ajak Diraa buka web di perangkat yang sama.
-
-**Cara B (untuk gift permanen):** Edit di admin panel sampai puas, lalu "kunci" edit-an itu ke kode:
-1. Buka DevTools browser (F12) → tab Application → Local Storage → cari key `diraa-pupaa:content`
-2. Copy value JSON itu
-3. Buka `src/config/loveConfig.ts`, ganti `defaultContent` / `LOVE_CONFIG` dengan nilai kamu
-4. Commit & push — sekarang edit-an jadi bawaan situs, terlihat semua orang
-
-Cara B ini juga bagus kalau kamu mau foto kamu sendiri jadi default (ganti file di `public/images/gallery/`).
+Database-nya SQLite, file kecil (`db/custom.db`), cukup untuk hadiah pribadi. Kalau nanti butuh lebih besar (ribuan catatan), tinggal upgrade ke Supabase (gratis juga) — tanya saja nanti.
 
 ---
 
-## 🧪 Tes hasil build lokal (sebelum push)
-
-Mau lihat hasil static-nya dulu sebelum push ke GitHub? Jalankan:
+## 🧪 Tes lokal sebelum deploy
 
 ```bash
-bun run build       # build ke folder ./out
-bun run serve       # serve folder ./out di http://localhost:3000
+bun run dev      # jalan di http://localhost:3000
+bun run lint     # cek kode
+bun run db:push  # sinkronisasi schema database
 ```
-
-Buka `http://localhost:3000` — itu versi yang sama persis dengan yang akan tampil di GitHub Pages.
 
 ---
 
 ## ❓ Troubleshooting
 
-**Web tampil kosong / 404 di GitHub Pages**
-- Pastikan repo Settings → Pages → Source = "GitHub Actions" (bukan "Deploy from a branch")
-- Cek tab Actions — kalau workflow gagal, klik pesan error untuk detail
+**Build gagal di Vercel**
+- Cek tab "Build Logs" di Vercel untuk error detail
+- Pastikan `ADMIN_PASSWORD` sudah di-set di Environment Variables
 
-**Foto/music tidak muncul setelah upload di admin**
-- localStorage penuh (~5MB). Upload foto lebih kecil, atau pakai URL gambar/lagu dari tempat lain
+**Web live tapi data tidak muncul / API 500**
+- Pastikan `bun run db:push` sudah dijalankan (kalau deploy manual)
+- Di Vercel, database file auto-create saat pertama kali API dipanggil — tunggu 30 detik lalu refresh
 
-**Mau fitur database beneran (catatan shared antar perangkat)**
-- Deploy ke Vercel gratis (https://vercel.com) — mendukung API routes + database
-- Atau tambahkan backend gratis seperti Supabase (https://supabase.com) — butuh setup tambahan, tanya saja nanti kalau mau
+**Mau pindah dari GitHub Pages ke Vercel**
+- Vercel lebih cocok untuk web ini (karena butuh server + database)
+- Kalau sebelumnya sudah deploy ke GitHub Pages, tinggal import repo yang sama ke Vercel — selesai
+
+**Mau fitur lebih besar (login user, upload video, dll)**
+- Vercel tetap gratis untuk fitur-fitur itu, tinggal tambah kodenya
+- Atau tambah Supabase (gratis) untuk database besar — tanya nanti kalau mau
 
 ---
 
-💗 Selamat! Web hadiah anniversary kamu sekarang live di internet, gratis, selamanya. Beri tahu kalau ada yang ingin disesuaikan.
+💗 Selamat! Web hadiah anniversary kamu sekarang live di internet, gratis, data tersimpan permanen, dan bisa dilihat Diraa dari mana saja. Beri tahu kalau ada yang ingin disesuaikan.

@@ -5,7 +5,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Loader2, RefreshCw, Send, Trash2 } from 'lucide-react';
 import { useContent } from '@/lib/romantic/content-context';
 import { useToast } from '@/hooks/use-toast';
-import { getNotes, addNote, deleteNote as removeNote } from '@/lib/storage';
 import SectionHeading from './SectionHeading';
 
 const MAX_AUTHOR = 50;
@@ -136,9 +135,12 @@ export default function LoveNotes() {
 
   const loadNotes = useCallback(async () => {
     try {
-      setNotes(getNotes());
+      const res = await fetch('/api/love-notes', { cache: 'no-store' });
+      if (!res.ok) throw new Error('fetch failed');
+      const data = (await res.json()) as { notes: LoveNote[] };
+      setNotes(data.notes ?? []);
     } catch {
-      // ignore
+      // keep current state
     } finally {
       setLoading(false);
     }
@@ -187,13 +189,22 @@ export default function LoveNotes() {
 
     setSubmitting(true);
     try {
-      const note = addNote(authorStr, bodyStr);
-      setNotes((prev) => [note, ...prev]);
+      const res = await fetch('/api/love-notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ author: authorStr, body: bodyStr }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Could not save your note.');
+      }
+      const data = (await res.json()) as { note: LoveNote };
+      setNotes((prev) => [data.note, ...prev]);
       setBody('');
       setAuthor('');
       toast({
         title: 'Note sent ♡',
-        description: 'Your little note has been kept in this browser.',
+        description: 'Your little note has been kept in their universe.',
       });
     } catch (err) {
       toast({
@@ -215,7 +226,10 @@ export default function LoveNotes() {
     const snapshot = notes;
     setNotes((prev) => prev.filter((n) => n.id !== note.id));
     try {
-      removeNote(note.id);
+      const res = await fetch(`/api/love-notes/${encodeURIComponent(note.id)}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error('delete failed');
       toast({
         title: 'Note removed ♡',
         description: 'A little note has been gently let go.',

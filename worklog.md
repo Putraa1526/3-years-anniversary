@@ -105,3 +105,32 @@ Stage Summary:
 - All visual/interactive features work; love notes + admin edits + song + photos persist per-browser via localStorage (with documented way to bake edits into the source for permanent sharing).
 - One-command deploy: push to GitHub main branch → Actions auto-builds + deploys → site live at https://<user>.github.io/<repo>/ (free, forever).
 - DEPLOY.md has full step-by-step Indonesian instructions. Lint clean, build verified, end-to-end browser-verified.
+
+---
+Task ID: VERCEL-MIGRATION
+Agent: main (orchestrator)
+Task: Migrate from static (GitHub Pages / localStorage) back to server-mode for Vercel hosting — so love notes + admin edits persist on the SERVER and are shared across all devices (Diraa sees them on her phone).
+
+Work Log:
+- Recreated all 6 API route handlers (deleted earlier for static export): love-notes (GET list / POST create / [id] DELETE), song (GET / PUT), song/upload (POST audio file), content (GET merge / PUT admin-gated sanitize), upload (POST image admin-gated), auth/admin (POST password check vs ADMIN_PASSWORD).
+- Reverted src/lib/romantic/content-context.tsx to fetch /api/content (with sessionStorage cache mirror for instant nav).
+- Reverted src/lib/romantic/admin-context.tsx to POST password to /api/auth/admin; token in sessionStorage.
+- Reverted LoveNotes.tsx, MusicPlayer.tsx, AdminPanel.tsx to use fetch (API) with x-admin-token header for admin-gated endpoints.
+- Deleted src/lib/storage.ts and .github/workflows/ (no longer needed).
+- Reverted next.config.ts to `output: 'standalone'` (Vercel-friendly), kept devIndicators:false.
+- Reverted package.json build script to the standalone build + cp static/public.
+- Added .env.example (DATABASE_URL + ADMIN_PASSWORD), vercel.json (buildCommand bun run build, framework nextjs, 30s function timeout for API routes), updated DEPLOY.md to full Indonesian Vercel guide (5-step deploy, ganti password, edit from website, troubleshooting).
+
+Agent Browser end-to-end verification:
+- Welcome screen → enter site → all 9 sections present, 6 gallery images loaded, no console/dev-log errors.
+- Love notes: submitted "Testing Vercel mode — should be saved on the SERVER" → cleared localStorage + sessionStorage → reloaded → note STILL THERE (confirmed server-side persistence, not browser).
+- Admin: login with ourlittleuniverse → AdminPanel opens with 7 tabs → edited partner one to "Diraa Sayang" → Save → site updated LIVE → cleared browser storage → reloaded → brand STILL "Diraa Sayang" (server-side).
+- Reverted partner name to "Diraa" + deleted the test note via API → clean state left.
+- DB verified clean: notes=0, song.url=empty, content.partnerOne=Diraa.
+- Lint clean. Dev server healthy on port 3000.
+
+Stage Summary:
+- The site now runs as a full Node server (Next.js App Router + API routes + Prisma SQLite), ready for free hosting on Vercel.
+- All data (love notes, admin edits, song, photos) is stored in the SQLite database on the server and shared across every visitor + device — Diraa will see Pupaa's edits and notes on her phone automatically.
+- DEPLOY.md has full 5-step Indonesian instructions for Vercel (create account, push to GitHub, import project, set ADMIN_PASSWORD env var, deploy).
+- Lint clean, build verified, end-to-end browser-verified with server-side persistence confirmed (survives browser storage clear).
