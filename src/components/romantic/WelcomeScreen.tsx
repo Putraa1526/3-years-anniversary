@@ -16,13 +16,14 @@ interface EnvelopeProps {
 
 function Envelope({ opening }: EnvelopeProps) {
   return (
-    <div className="relative h-40 w-56 sm:h-48 sm:w-64">
-      {/* Letter peeking out */}
+    <div className="relative h-36 w-52 sm:h-44 sm:w-60 md:h-48 md:w-64">
+      {/* Letter peeking out — hidden (opacity 0) when closed, slides up when opening */}
       <motion.div
-        className="absolute left-1/2 top-3 z-10 h-32 w-44 -translate-x-1/2 rounded-md bg-white p-3 shadow-md sm:h-36 sm:w-52"
-        style={{ opacity: 0 }}
+        className="pointer-events-none absolute left-1/2 top-3 z-10 h-28 w-40 -translate-x-1/2 rounded-md bg-white p-3 shadow-md sm:h-32 sm:w-44 md:h-36 md:w-52"
+        initial={{ opacity: 0, y: 0 }}
         animate={opening ? { y: -34, opacity: 1 } : { y: 0, opacity: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
+        aria-hidden={!opening}
       >
         <div className="flex h-full flex-col items-center justify-center gap-1 text-center">
           <Heart className="h-4 w-4 fill-dusty-pink/70 text-dusty-pink/70" />
@@ -42,6 +43,7 @@ function Envelope({ opening }: EnvelopeProps) {
       <motion.div
         className="absolute left-0 right-0 top-0 h-1/2 w-full"
         style={{ transformOrigin: 'top' }}
+        initial={{ rotateX: 0 }}
         animate={opening ? { rotateX: 180 } : { rotateX: 0 }}
         transition={{ duration: 0.8, ease: 'easeInOut' }}
       >
@@ -53,6 +55,7 @@ function Envelope({ opening }: EnvelopeProps) {
       {/* Heart seal */}
       <motion.div
         className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2"
+        initial={{ scale: 1, opacity: 1 }}
         animate={opening ? { scale: 0, opacity: 0 } : { scale: 1, opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
@@ -69,7 +72,7 @@ function Envelope({ opening }: EnvelopeProps) {
           return (
             <motion.div
               key={`fly-heart-${i}`}
-              className="absolute left-1/2 top-1/2"
+              className="pointer-events-none absolute left-1/2 top-1/2"
               initial={{ x: 0, y: 0, opacity: 0, scale: 0.6 }}
               animate={{
                 x: Math.cos(angle) * distance,
@@ -105,30 +108,32 @@ export default function WelcomeScreen({ onEnter }: WelcomeScreenProps) {
         key="welcome"
         exit={{ opacity: 0, scale: 1.04, filter: 'blur(8px)' }}
         transition={{ duration: 0.7, ease: 'easeInOut' }}
-        className="grain fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-dreamy px-6"
+        className="grain fixed inset-0 z-50 flex flex-col overflow-y-auto overflow-x-hidden bg-dreamy px-6 py-10"
       >
         <DecorativeBackground density="high" moon hearts stars sparkles />
 
         <button
           type="button"
           onClick={onEnter}
-          className="absolute right-5 top-5 z-50 rounded-full border border-dusty-pink/30 bg-white/60 px-4 py-1.5 text-xs font-medium uppercase tracking-[0.2em] text-ink-soft backdrop-blur transition hover:text-ink"
+          className="absolute right-4 top-4 z-50 rounded-full border border-dusty-pink/30 bg-white/60 px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.2em] text-ink-soft backdrop-blur transition hover:text-ink"
         >
           Skip Intro
         </button>
 
-        <div className="relative z-10 flex flex-col items-center text-center">
-          <p className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.25em] text-dusty-pink/80">
+        {/* my-auto centers vertically when content fits; collapses to 0
+            when it overflows so the top stays visible and scrollable. */}
+        <div className="relative z-10 mx-auto my-auto flex w-full max-w-xl flex-col items-center px-2 text-center sm:px-4">
+          <p className="max-w-[16rem] sm:max-w-xs inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.22em] text-dusty-pink/80 sm:text-xs">
             Someone made a little world just for you…
           </p>
 
-          <h1 className="mt-4 font-serif-romantic text-4xl font-semibold text-ink sm:text-5xl">
+          <h1 className="mt-3 font-serif-romantic text-3xl font-semibold text-ink sm:mt-4 sm:text-4xl md:text-5xl">
             <span>{partnerOne}</span>
-            <Heart className="mx-3 inline-block h-7 w-7 fill-soft-rose text-soft-rose" />
+            <Heart className="mx-2 inline-block h-6 w-6 fill-soft-rose text-soft-rose sm:mx-3 sm:h-7 sm:w-7" />
             <span>{partnerTwo}</span>
           </h1>
 
-          <div className="mt-8">
+          <div className="mt-6 sm:mt-8">
             <Envelope opening={opening} />
           </div>
 
@@ -141,7 +146,7 @@ export default function WelcomeScreen({ onEnter }: WelcomeScreenProps) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0, y: -8 }}
-                className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-dusty-pink to-soft-rose px-7 py-3.5 text-white shadow-lg transition hover:scale-[1.03]"
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-dusty-pink to-soft-rose px-6 py-3 text-sm text-white shadow-lg transition hover:scale-[1.03] sm:mt-8 sm:px-7 sm:py-3.5"
               >
                 <Sparkles className="h-4 w-4" />
                 Open Our World
@@ -153,7 +158,7 @@ export default function WelcomeScreen({ onEnter }: WelcomeScreenProps) {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="mt-8 font-serif-romantic text-2xl text-ink"
+                className="mt-6 font-serif-romantic text-xl text-ink sm:mt-8 sm:text-2xl"
               >
                 Hi, {partnerOne} ♡
               </motion.p>
