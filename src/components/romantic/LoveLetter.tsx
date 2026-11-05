@@ -197,6 +197,7 @@ export default function LoveLetter() {
   const [revealed, setRevealed] = useState(false);
   const [visibleParagraphs, setVisibleParagraphs] = useState(0);
   const skipReveal = useRef(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!opened) return;
@@ -205,25 +206,34 @@ export default function LoveLetter() {
       setRevealed(true);
       return;
     }
-    if (visibleParagraphs >= total) {
-      setRevealed(true);
-      return;
-    }
-    const id = setInterval(() => {
+    // Start a single interval that reveals one paragraph at a time.
+    intervalRef.current = setInterval(() => {
       setVisibleParagraphs((v) => {
         if (v + 1 >= total) {
-          clearInterval(id);
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
           setRevealed(true);
           return total;
         }
         return v + 1;
       });
     }, 1100);
-    return () => clearInterval(id);
-  }, [opened, visibleParagraphs, total]);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [opened, total]);
 
   const handleShowAll = () => {
     skipReveal.current = true;
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
     setVisibleParagraphs(total);
     setRevealed(true);
   };
@@ -249,18 +259,6 @@ export default function LoveLetter() {
           title="A Little Letter for You"
           subtitle="Some feelings are better written from the heart."
         />
-
-        {/* Screen reader full letter */}
-        <div className="sr-only">
-          <p>{letter.greeting}</p>
-          {letter.paragraphs.map((p, i) => (
-            <p key={`sr-${i}`}>{p}</p>
-          ))}
-          <p>{letter.closing}</p>
-          <p>
-            {letter.signOff} {letter.signature}
-          </p>
-        </div>
 
         <div className="mt-14">
           <AnimatePresence mode="wait">
