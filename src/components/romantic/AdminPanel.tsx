@@ -52,13 +52,33 @@ export default function AdminPanel() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch('/api/content', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-token': token ?? '' }, body: JSON.stringify(draft) });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Could not save.');
+      const res = await fetch('/api/content', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': token ?? '' },
+        body: JSON.stringify(draft),
+      });
+      // Try to parse JSON safely — the error response should always be JSON,
+      // but we guard against non-JSON bodies (e.g. a 500 HTML page).
+      let data: { error?: string } = {};
+      try {
+        data = await res.json();
+      } catch {
+        // non-JSON body
+      }
+      if (!res.ok) {
+        const msg =
+          res.status === 401
+            ? 'Your session has expired. Please sign in again.'
+            : data.error || `Could not save (HTTP ${res.status}).`;
+        throw new Error(msg);
+      }
       await refresh();
       toast({ title: 'Your changes were saved ♡', description: 'The site has been updated.' });
     } catch (err) {
-      toast({ title: 'Could not save', description: err instanceof Error ? err.message : 'Please try again in a moment.' });
+      toast({
+        title: 'Could not save',
+        description: err instanceof Error ? err.message : 'Please try again in a moment.',
+      });
     } finally {
       setSaving(false);
     }
